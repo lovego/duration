@@ -16,7 +16,7 @@ func init() {
 var EN = []Unit{
 	{Value: Year, Name: "Y", OtherNames: []string{"year", "years"}},
 	{Value: Month, Name: "M", OtherNames: []string{"month", "months"}},
-	{Value: Week, Name: "W", OtherNames: []string{"week", "weeks"}},
+	{Value: Week, Name: "", OtherNames: []string{"W", "week", "weeks"}},
 	{Value: Day, Name: "D", OtherNames: []string{"day", "days"}},
 
 	{Value: Hour, Name: "h", OtherNames: []string{"hour", "hours"}},
@@ -35,7 +35,7 @@ var EN = []Unit{
 var ZH = []Unit{
 	{Value: Year, Name: "年", OtherNames: []string{}},
 	{Value: Month, Name: "个月", OtherNames: []string{"月"}},
-	{Value: Week, Name: "周", OtherNames: []string{"星期", "个星期"}},
+	{Value: Week, Name: "", OtherNames: []string{"周", "星期", "个星期"}},
 	{Value: Day, Name: "天", OtherNames: []string{"日"}},
 
 	{Value: Hour, Name: "小时", OtherNames: []string{"时"}},

@@ -31,3 +31,35 @@ func ExampleDuration_UnmarshalJSON() {
 	fmt.Println(d)
 	// Output: 2分3秒
 }
+
+func ExampleDuration_Truncate() {
+	d, _ := Parse(`2m3s`)
+	fmt.Println(d.Truncate(Minute))
+
+	d, _ = Parse(`-1Y2M9D13h5m`)
+	fmt.Println(d.Truncate(Day))
+
+	// Output:
+	// 2m
+	// -1Y2M9D
+}
+
+func ExampleDuration_Round() {
+	d, _ := Parse(`2m29s`)
+	fmt.Println(d.Round(Minute))
+
+	d, _ = Parse(`2m30s`)
+	fmt.Println(d.Round(Minute))
+
+	d, _ = Parse(`-2m29s`)
+	fmt.Println(d.Round(Minute))
+
+	d, _ = Parse(`-2m30s`)
+	fmt.Println(d.Round(Minute))
+
+	// Output:
+	// 2m
+	// 3m
+	// -2m
+	// -3m
+}
