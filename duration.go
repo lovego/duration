@@ -1,6 +1,9 @@
 package duration
 
-import "strconv"
+import (
+	"bytes"
+	"strconv"
+)
 
 type Duration struct {
 	Value int64 // max duration: (1<<63 - 1) / (365 * 86400 * 1000 * 1000 * 1000) = 292 year
@@ -39,10 +42,19 @@ func (d *Duration) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err := unmarshal(&s); err != nil {
 		return err
 	}
-	drt, err := Parse(s)
+	duration, err := Parse(s)
 	if err != nil {
 		return err
 	}
-	*d = drt
+	*d = duration
+	return nil
+}
+
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	duration, err := Parse(string(bytes.Trim(b, `"`)))
+	if err != nil {
+		return err
+	}
+	*d = duration
 	return nil
 }
