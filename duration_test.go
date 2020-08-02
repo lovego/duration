@@ -7,6 +7,19 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+func ExampleDuration_String() {
+	d, _ := Parse(`2m3s`)
+	fmt.Println(d)
+
+	d, _ = Parse(`-1Y2M9D13h5m`)
+	d.N = 2
+	fmt.Println(d)
+
+	// Output:
+	// 2m3s
+	// -1Y2M
+}
+
 func ExampleDuration_UnmarshalYAML() {
 	var d Duration
 	if err := yaml.Unmarshal([]byte(`123秒`), &d); err != nil {

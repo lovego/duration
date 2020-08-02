@@ -13,6 +13,7 @@ const (
 type Duration struct {
 	Value int64 // max duration: (1<<63 - 1) / (365 * 86400 * 1000 * 1000 * 1000) = 292 year
 	Units []Unit
+	N     int8 // String returns only the n most Signifcant units if n > 0.
 }
 
 func (d Duration) String() (s string) {
@@ -24,6 +25,9 @@ func (d Duration) String() (s string) {
 		s += "-"
 		d.Value = -d.Value
 	}
+	if len(d.Units) == 0 {
+		d.Units = EN
+	}
 
 	for _, u := range d.Units {
 		if u.Name != "" {
@@ -34,10 +38,16 @@ func (d Duration) String() (s string) {
 				} else {
 					s += strconv.FormatInt(v, 10) + u.Name
 				}
+				if d.N > 0 {
+					d.N--
+					if d.N == 0 {
+						return
+					}
+				}
 			}
 			d.Value %= u.Value
 			if d.Value == 0 {
-				break
+				return
 			}
 		}
 	}
