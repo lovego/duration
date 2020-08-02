@@ -57,7 +57,7 @@ func Parse(s string) (Duration, error) {
 		value = -value
 	}
 
-	return Duration{value: value, units: nil}, nil
+	return Duration{Value: value, Units: findUnitSet(unitNames)}, nil
 }
 
 // leadingSignSymbol consumes the leading [-+]? from s.

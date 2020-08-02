@@ -5,49 +5,71 @@ import (
 	"fmt"
 )
 
-var unitSetsSlice = make([][]Unit, 0, 4)
+var unitSetsSlice = make([]unitSet, 0, 4)
+
+type unitSet struct {
+	units    []Unit
+	namesMap map[string]struct{}
+}
 
 // RegisterUnitSet register a set of units which will be used by Parse() and Duration.String().
-func RegisterUnitSet(unitSet []Unit) error {
-	if err := validateUnitSet(unitSet); err != nil {
+func RegisterUnitSet(units []Unit) error {
+	us := unitSet{units: units}
+
+	if err := us.validate(); err != nil {
 		return err
 	}
-	for _, unit := range unitSet {
+	for _, unit := range us.units {
 		// unit.register do not return error, otherwise an unit set may be partially registered.
 		unit.register()
 	}
-	unitSetsSlice = append(unitSetsSlice, unitSet)
+	unitSetsSlice = append(unitSetsSlice, us)
 	return nil
 }
 
-func validateUnitSet(unitSet []Unit) error {
-	if len(unitSet) == 0 {
+func (us *unitSet) validate() error {
+	if len(us.units) == 0 {
 		return errors.New("duration: unit set must not be empty.")
 	}
 
 	// unit name and unit value in an unit set must be unique
-	values, names := map[int64]bool{}, map[string]bool{}
-	for _, unit := range unitSet {
+	values, names := make(map[int64]struct{}), make(map[string]struct{})
+	for _, unit := range us.units {
 		if err := unit.validate(); err != nil {
 			return err
 		}
-		if values[unit.Value] {
+		if _, ok := values[unit.Value]; ok {
 			return fmt.Errorf(`duration: duplicate value "%d" in unit set.`, unit.Value)
 		} else {
-			values[unit.Value] = true
+			values[unit.Value] = struct{}{}
 		}
 
 		for _, name := range unit.allNames() {
-			if names[name] {
+			if _, ok := names[name]; ok {
 				return fmt.Errorf(`duration: duplicate name "%s" in unit set.`, name)
 			} else {
-				names[name] = true
+				names[name] = struct{}{}
 			}
 		}
 	}
+	us.namesMap = names
 	return nil
 }
 
-func FindUnitSet(units []string) []Unit {
-	return nil
+func (us unitSet) match(unitNames []string) bool {
+	for _, name := range unitNames {
+		if _, ok := us.namesMap[name]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+func findUnitSet(unitNames []string) []Unit {
+	for _, us := range unitSetsSlice {
+		if us.match(unitNames) {
+			return us.units
+		}
+	}
+	return EN
 }

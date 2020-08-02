@@ -3,25 +3,22 @@ package duration
 import "strconv"
 
 type Duration struct {
-	value int64 // max duration: (1<<63 - 1) / (365 * 86400 * 1000 * 1000 * 1000) = 292 year
-	units []Unit
+	Value int64 // max duration: (1<<63 - 1) / (365 * 86400 * 1000 * 1000 * 1000) = 292 year
+	Units []Unit
 }
 
 func (d Duration) String() (s string) {
-	if d.value == 0 {
+	if d.Value == 0 {
 		return "0"
 	}
 
-	if d.value < 0 {
+	if d.Value < 0 {
 		s += "-"
-		d.value = -d.value
+		d.Value = -d.Value
 	}
 
-	if len(d.units) == 0 {
-		d.units = EN
-	}
-	for _, u := range d.units {
-		v := d.value / u.Value
+	for _, u := range d.Units {
+		v := d.Value / u.Value
 		if v != 0 {
 			if v > 1 && u.PluralName != "" {
 				s += strconv.FormatInt(v, 10) + u.PluralName
@@ -29,8 +26,8 @@ func (d Duration) String() (s string) {
 				s += strconv.FormatInt(v, 10) + u.Name
 			}
 		}
-		d.value %= u.Value
-		if d.value == 0 {
+		d.Value %= u.Value
+		if d.Value == 0 {
 			break
 		}
 	}
