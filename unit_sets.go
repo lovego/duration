@@ -5,12 +5,7 @@ import (
 	"fmt"
 )
 
-var unitSets = make([][]Unit, 0, 4)
-
-var UnitsEN = []Unit{
-	{},
-}
-var UnitsZH = []Unit{}
+var unitSetsSlice = make([][]Unit, 0, 4)
 
 // RegisterUnitSet register a set of units which will be used by Parse() and Duration.String().
 func RegisterUnitSet(unitSet []Unit) error {
@@ -21,7 +16,7 @@ func RegisterUnitSet(unitSet []Unit) error {
 		// unit.register do not return error, otherwise an unit set may be partially registered.
 		unit.register()
 	}
-	unitSets = append(unitSets, unitSet)
+	unitSetsSlice = append(unitSetsSlice, unitSet)
 	return nil
 }
 
@@ -30,20 +25,21 @@ func validateUnitSet(unitSet []Unit) error {
 		return errors.New("duration: unit set must not be empty.")
 	}
 
-	values := map[uint64]bool{}
-	names := map[string]bool{}
+	// unit name and unit value in an unit set must be unique
+	values, names := map[int64]bool{}, map[string]bool{}
 	for _, unit := range unitSet {
 		if err := unit.validate(); err != nil {
 			return err
 		}
 		if values[unit.Value] {
-			return fmt.Errorf(`duration: duplicte value "%d" in unit set.`, unit.Value)
+			return fmt.Errorf(`duration: duplicate value "%d" in unit set.`, unit.Value)
 		} else {
 			values[unit.Value] = true
 		}
-		for _, name := range unit.Names {
+
+		for _, name := range unit.allNames() {
 			if names[name] {
-				return fmt.Errorf(`duration: duplicte name "%s" in unit set.`, name)
+				return fmt.Errorf(`duration: duplicate name "%s" in unit set.`, name)
 			} else {
 				names[name] = true
 			}

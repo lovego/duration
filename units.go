@@ -8,63 +8,70 @@ import (
 )
 
 const (
-	Year        uint64 = 365 * Day
-	Month              = 30 * Day
-	Week               = 7 * Day
-	Day                = 24 * Hour
-	Hour               = 60 * Minute
-	Minute             = 60 * Second
-	Second             = 1000 * Millisecond
-	Millisecond        = 1000 * Microsecond
-	Microsecond        = 1000 * Nanosecond
-	Nanosecond         = 1
+	Year        int64 = 365 * Day
+	Month             = 30 * Day
+	Week              = 7 * Day
+	Day               = 24 * Hour
+	Hour              = 60 * Minute
+	Minute            = 60 * Second
+	Second            = 1000 * Millisecond
+	Millisecond       = 1000 * Microsecond
+	Microsecond       = 1000 * Nanosecond
+	Nanosecond        = 1
 )
 
-var units = make(map[string]uint64, 64)
+var unitsMap = make(map[string]int64, 64)
 
 type Unit struct {
-	// how many nanoseconds the unit has.
-	Value uint64
-	// A unit can have many names, but different unit cann't have same names.
-	// If the first name is not empty, it will used by Format func in output.
-	Names []string
+	Value      int64    // How many nanoseconds the unit has.
+	Name       string   // If Name field is empty, the unit will not be used by Duration.Format.
+	PluralName string   // Name in plural form, optional.
+	OtherNames []string // Other names, optional.
 }
 
 func (unit Unit) validate() error {
 	if unit.Value == 0 {
 		return errors.New("duration: Unit.Value must not be 0.")
 	}
-	if len(unit.Names) == 0 {
-		return errors.New("duration: Unit.Names must not be empty.")
+	if unit.Name == "" && len(unit.OtherNames) == 0 {
+		return errors.New("duration: Unit.Name and Unit.OtherNames must not both be empty.")
 	}
-	for _, name := range unit.Names {
-		if name != "" {
-			if err := unit.validateName(name); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return unit.validateOrRegister(false)
 }
 
 func (unit Unit) register() {
-	for _, name := range unit.Names {
-		if name != "" {
-			if err := unit.validateName(name); err != nil {
+	unit.validateOrRegister(true)
+}
+
+func (unit Unit) validateOrRegister(register bool) error {
+	for _, name := range unit.allNames() {
+		if value := unitsMap[name]; value != 0 && value != unit.Value {
+			err := fmt.Errorf(
+				`duration: unit name "%s" aready exists but have a different value.`, name,
+			)
+			if register {
 				// This should not happen, beccause of previous validation.
 				// If it happend, it must be a bug, so panic here to find it out.
 				log.Panic(err)
 			}
-			units[name] = unit.Value
+			return err
+		}
+		if register {
+			unitsMap[name] = unit.Value
 		}
 	}
+	return nil
 }
 
-func (unit Unit) validateName(name string) error {
-	if value := units[name]; value != 0 && value != unit.Value {
-		return fmt.Errorf(
-			`duration: unit name "%s" aready exists but have a different value.`, name,
-		)
+func (unit Unit) allNames() (names []string) {
+	if unit.Name != "" {
+		names = append(names, unit.Name)
 	}
-	return nil
+	if unit.PluralName != "" {
+		names = append(names, unit.PluralName)
+	}
+	if len(unit.OtherNames) > 0 {
+		names = append(names, unit.OtherNames...)
+	}
+	return
 }
